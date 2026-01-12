@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 
+	"coinbase-advanced-recurring/internal/coinbase"
 	"coinbase-advanced-recurring/internal/config"
 	"coinbase-advanced-recurring/internal/handler"
 	"coinbase-advanced-recurring/internal/secret"
@@ -27,6 +28,11 @@ func main() {
 	s, err := secretClient.Fetch(ctx, cfg.SecretName)
 	if err != nil {
 		log.Fatalf("Failed to fetch secret %q: %v", cfg.SecretName, err)
+	}
+
+	coinbaseClient, err := coinbase.NewClient(cfg.AppEnv, s)
+	if err != nil {
+		log.Fatalf("Failed to create Coinbase client: %v", err)
 	}
 
 	h := handler.New()
