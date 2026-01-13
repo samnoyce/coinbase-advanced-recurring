@@ -1,11 +1,17 @@
 package handler
 
-import "context"
+import (
+	"context"
 
-type Handler struct{}
+	"coinbase-advanced-recurring/internal/coinbase"
+)
 
-func New() *Handler {
-	return &Handler{}
+type Handler struct {
+	client *coinbase.Client
+}
+
+func New(client *coinbase.Client) *Handler {
+	return &Handler{client: client}
 }
 
 func (h *Handler) Run(ctx context.Context) error {

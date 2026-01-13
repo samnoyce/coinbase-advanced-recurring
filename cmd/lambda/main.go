@@ -35,7 +35,7 @@ func main() {
 		log.Fatalf("Failed to create Coinbase client: %v", err)
 	}
 
-	h := handler.New()
+	h := handler.New(coinbaseClient)
 
 	lambda.Start(h.Run)
 }
