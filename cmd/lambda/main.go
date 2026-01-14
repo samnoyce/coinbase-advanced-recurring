@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
 
@@ -13,29 +14,37 @@ import (
 )
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+	}))
+
 	ctx := context.Background()
 
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		logger.Error("Failed to load config", "error", err)
+		return
 	}
 
 	secretClient, err := secret.NewClient(ctx)
 	if err != nil {
-		log.Fatalf("Failed to create Secrets Manager client: %v", err)
+		logger.Error("Failed to create Secrets Manager client", "error", err)
+		return
 	}
 
 	s, err := secretClient.Fetch(ctx, cfg.SecretName)
 	if err != nil {
-		log.Fatalf("Failed to fetch secret %q: %v", cfg.SecretName, err)
+		logger.Error("Failed to fetch secret", "secret_name", cfg.SecretName, "error", err)
+		return
 	}
 
 	coinbaseClient, err := coinbase.NewClient(cfg.AppEnv, s)
 	if err != nil {
-		log.Fatalf("Failed to create Coinbase client: %v", err)
+		logger.Error("Failed to create Coinbase client", "app_env", cfg.AppEnv, "error", err)
+		return
 	}
 
-	h := handler.New(coinbaseClient)
+	h := handler.New(coinbaseClient, logger)
 
 	lambda.Start(h.Run)
 }
